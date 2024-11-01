@@ -1,0 +1,34 @@
+<configuration debug="false">
+
+    <!--  appenders -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d [%t] %-5p %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="qnLogfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/qn.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>logs/qn.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>8</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>40960KB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%d [%t] %-5p %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--  loggers -->
+	<logger name="com.qdx.qn.consumer.User" level="INFO" additivity="false">
+		<appender-ref ref="qnLogfile"/>
+	</logger>
+
+    <root level="WARN">
+        <appender-ref ref="qnLogfile"/>
+    </root>
+
+</configuration>

@@ -1,5 +1,7 @@
 package com.qdx.qn.config;
 
+import java.util.concurrent.Executor;
+
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -12,25 +14,24 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import lombok.Setter;
 
 @Configuration
 @EnableRabbit
+@ConfigurationProperties(prefix = "ms")
 public class MessagingConfig {
 
     public static final String QUEUE = "qn_queue";
     public static final String EXCHANGE = "qn_exchange";
     public static final String ROUTING_KEY = "qn_routingKey";
-
-   @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory () {
-    	SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory());
-        factory.setConcurrentConsumers(3);
-        factory.setMessageConverter(converter());
-        return factory;
-    }
+    
+    @Setter 
+    private int concurrentConsumers;
 
     @Bean
     public ConnectionFactory connectionFactory() {
@@ -40,6 +41,25 @@ public class MessagingConfig {
         connectionFactory.setPassword("guest");
         return connectionFactory;
     }
+
+    @Bean
+    public Executor userExecutor() {
+    	ThreadPoolTaskExecutor te = new ThreadPoolTaskExecutor();
+    	te.setCorePoolSize(concurrentConsumers);
+    	te.setThreadNamePrefix("userThreads-");
+    	return te;
+    }
+    
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory () {
+    	SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    	factory.setTaskExecutor(userExecutor());
+        factory.setConnectionFactory(connectionFactory());
+        factory.setConcurrentConsumers(concurrentConsumers);
+        factory.setMessageConverter(converter());
+        return factory;
+    }
+
 
     @Bean
     public Queue queue() {
