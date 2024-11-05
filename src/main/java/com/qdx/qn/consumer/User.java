@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class User {
 
-    @RabbitListener(queues = MessagingConfig.QUEUE)
+    @RabbitListener(queues = MessagingConfig.QUEUE_URL_SHORTENING)
     public void consumeMessageFromQueue(OrderStatus orderStatus) {
         log.info("Message recieved from queue : " + orderStatus);
     }

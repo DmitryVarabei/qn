@@ -23,22 +23,25 @@ import lombok.Setter;
 
 @Configuration
 @EnableRabbit
-@ConfigurationProperties(prefix = "ms")
+@ConfigurationProperties(prefix = "rabbitmq")
+@Setter
 public class MessagingConfig {
 
-    public static final String QUEUE = "qn_queue";
+    public static final String QUEUE_URL_SHORTENING = "url_shortening_queue";
     public static final String EXCHANGE = "qn_exchange";
-    public static final String ROUTING_KEY = "qn_routingKey";
+    public static final String ROUTING_KEY_URL_SHORTENING = "url_shortening_routingKey";
     
-    @Setter 
+    private String url;
+    private String username;
+    private String password;
     private int concurrentConsumers;
 
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory =
-            new CachingConnectionFactory("localhost");
-        connectionFactory.setUsername("guest");
-        connectionFactory.setPassword("guest");
+            new CachingConnectionFactory(url);
+        connectionFactory.setUsername(username);
+        connectionFactory.setPassword(password);
         return connectionFactory;
     }
 
@@ -57,13 +60,14 @@ public class MessagingConfig {
         factory.setConnectionFactory(connectionFactory());
         factory.setConcurrentConsumers(concurrentConsumers);
         factory.setMessageConverter(converter());
+        factory.setPrefetchCount(1);
         return factory;
     }
 
 
     @Bean
     public Queue queue() {
-        return new Queue(QUEUE);
+        return new Queue(QUEUE_URL_SHORTENING);
     }
 
     @Bean
@@ -73,7 +77,7 @@ public class MessagingConfig {
 
     @Bean
     public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY_URL_SHORTENING);
     }
 
     @Bean
